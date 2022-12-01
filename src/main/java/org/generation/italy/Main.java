@@ -15,6 +15,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 		 query1();
+		 query2();
 	}
 	
 	//Creare in getore db la query per ottenere la lista di tutte le nazioni 
@@ -23,7 +24,7 @@ public class Main {
 		
 		Scanner sc = new Scanner(System.in);
 		System.out.print("Cerca una nazione: ");
-		String nation = sc.next();
+		String nation = sc.nextLine();
 		sc.close();
 
 		try(Connection con = DriverManager.getConnection(url, user, password)) {
@@ -63,6 +64,54 @@ public class Main {
 		}
 
 	}
+	
+	//Dopo aver effettuato la ricerca, richiede all'utente un `id` su cui 
+	//effettuare ulteriori analisi restituendo *tutte le lingue parlate* + le statistiche piu' recenti della nazione
+	private static void query2() {
+		
+		Scanner sc = new Scanner(System.in);
+		System.out.print("Cerca un id: ");
+		int id = sc.nextInt();
+		sc.close();
+
+		try(Connection con = DriverManager.getConnection(url, user, password)) {
+			
+			final String sql = "SELECT language, year, population, gdp "
+								+ " FROM languages "
+								+ " JOIN country_languages "
+								+ " ON languages.language_id = country_languages.language_id "
+								+ " JOIN country_stats "
+								+ " ON country_languages.country_id = country_stats.country_id "
+								+ " WHERE country_languages.country_id = ?";
+			
+			try (PreparedStatement ps = con.prepareStatement(sql)){
+				ps.setInt(1, id);
+				
+				try(ResultSet rs = ps.executeQuery()) {
+				
+				while(rs.next()) {
+					
+					final String language = rs.getString(1);
+					final int year = rs.getInt(2);
+					final long population = rs.getLong(3);
+					final int gdp = rs.getInt(4);
+					
+					System.out.println(language + "\n"
+							+ "Anno: " + year + "\n"
+							+ "Population: " + population + "\n"
+							+ "Gdp: " + gdp);
+				}				
+				}
+			}
+						
+		} catch (SQLException ex) {
+			
+			System.err.println("Error: " + ex.getMessage());
+		}
 
 	}
+
+	}
+
+
 
